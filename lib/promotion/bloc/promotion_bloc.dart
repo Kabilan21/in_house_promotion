@@ -16,40 +16,38 @@ class PromotionBloc extends Bloc<PromotionEvent, PromotionState> {
   FirebaseRemoteConfig config;
   SharedPreferences preferences;
 
-  PromotionBloc(
-      {required this.appIdentifier,
-      required this.config,
-      required this.preferences})
+  PromotionBloc({required this.appIdentifier, required this.config, required this.preferences})
       : super(PromotionInitial()) {
     on<LoadPromotionEvent>(loadPromotion);
     on<UpdateViewedAppsEvent>(updateViewedApps);
   }
 
-  FutureOr<void> loadPromotion(
-      LoadPromotionEvent event, Emitter<PromotionState> emit) async {
-    final viewedApps = preferences.getString(viewedAppsKey) ?? '';
-    final promotion = Promotion.fromJson(config.getString(promotionKey));
-    final canShowPromotion = promotion.canShowPromotion &&
-        (!promotion.useDynamicKey || config.getBool(promotion.dynamicKey));
-    final apps = canShowPromotion
-        ? promotion.apps
-            .where((app) =>
-                app.platformAppUrl.isNotEmpty &&
-                app.packageName != appIdentifier &&
-                app.isEnabled &&
-                (!app.useDynamicKey || config.getBool(app.dynamicKey)))
-            .toList()
-        : <App>[];
+  FutureOr<void> loadPromotion(LoadPromotionEvent event, Emitter<PromotionState> emit) async {
+    try {
+      final viewedApps = preferences.getString(viewedAppsKey) ?? '';
+      final promotion = Promotion.fromJson(config.getString(promotionKey));
+      final canShowPromotion =
+          promotion.canShowPromotion && (!promotion.useDynamicKey || config.getBool(promotion.dynamicKey));
+      final apps = canShowPromotion
+          ? promotion.apps
+              .where((app) =>
+                  app.platformAppUrl.isNotEmpty &&
+                  app.packageName != appIdentifier &&
+                  app.isEnabled &&
+                  (!app.useDynamicKey || config.getBool(app.dynamicKey)))
+              .toList()
+          : <App>[];
 
-    final newAppList = apps.map((e) => e.packageName).join(",");
-    if (apps.isNotEmpty) {
-      emit(PromotionLoadedState(
-          apps: apps, shouldNotify: viewedApps != newAppList));
+      final newAppList = apps.map((e) => e.packageName).join(",");
+      if (apps.isNotEmpty) {
+        emit(PromotionLoadedState(apps: apps, shouldNotify: viewedApps != newAppList));
+      }
+    } catch (e) {
+      emit(const PromotionLoadedState(apps: [], shouldNotify: false));
     }
   }
 
-  FutureOr<void> updateViewedApps(
-      UpdateViewedAppsEvent event, Emitter<PromotionState> emit) {
+  FutureOr<void> updateViewedApps(UpdateViewedAppsEvent event, Emitter<PromotionState> emit) {
     final newAppList = event.apps.map((e) => e.packageName).join(",");
     preferences.setString(viewedAppsKey, newAppList);
     emit(PromotionLoadedState(apps: event.apps, shouldNotify: false));
