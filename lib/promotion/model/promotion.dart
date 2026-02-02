@@ -95,7 +95,7 @@ class App extends Equatable {
       name: (map['name'] ?? '') as String,
       packageName: (map['packageName'] ?? '') as String,
       appUrl: (map['appUrl'] ?? '') as String,
-      iosAppUrl: (map['appUrl'] ?? '') as String,
+      iosAppUrl: (map['iosAppUrl'] ?? '') as String,
       iconUrl: (map['iconUrl'] ?? '') as String,
       description: (map['description'] ?? '') as String,
       callToAction: (map['callToAction'] ?? '') as String,
